@@ -1,0 +1,1096 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Courrier YSL" />
+  <meta name="theme-color" content="#0a0a0a" />
+  <title>Courrier YSL</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+    :root {
+      --black: #0a0a0a;
+      --white: #f5f0eb;
+      --gold: #c9a84c;
+      --gold-light: #e8c97a;
+      --red: #c0392b;
+      --green: #27ae60;
+      --grey: #1e1e1e;
+      --grey2: #2c2c2c;
+      --grey3: #444;
+      --text-muted: #888;
+      --radius: 12px;
+      --tab-h: 72px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+    body {
+      background: var(--black);
+      color: var(--white);
+      font-family: 'DM Sans', sans-serif;
+      min-height: 100vh;
+      min-height: -webkit-fill-available;
+      overflow-x: hidden;
+    }
+
+    /* ── HEADER ── */
+    .header {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      background: var(--black);
+      border-bottom: 1px solid var(--grey2);
+      padding: env(safe-area-inset-top, 20px) 20px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .header-logo {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 22px;
+      letter-spacing: 3px;
+      color: var(--gold);
+    }
+    .header-subtitle {
+      font-size: 11px;
+      color: var(--text-muted);
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+    }
+    .header-date {
+      font-size: 12px;
+      color: var(--text-muted);
+      text-align: right;
+    }
+
+    /* ── CONTENT ── */
+    .content {
+      padding-top: calc(env(safe-area-inset-top, 20px) + 70px);
+      padding-bottom: calc(var(--tab-h) + env(safe-area-inset-bottom, 10px) + 10px);
+      min-height: 100vh;
+    }
+
+    /* ── TABS ── */
+    .tab { display: none; padding: 20px 16px; }
+    .tab.active { display: block; }
+
+    /* ── BOTTOM NAV ── */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      z-index: 100;
+      background: var(--grey);
+      border-top: 1px solid var(--grey2);
+      display: flex;
+      padding-bottom: env(safe-area-inset-bottom, 10px);
+    }
+    .nav-btn {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 10px 0;
+      gap: 4px;
+      cursor: pointer;
+      border: none;
+      background: none;
+      color: var(--text-muted);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 10px;
+      letter-spacing: 0.5px;
+      transition: color 0.2s;
+    }
+    .nav-btn.active { color: var(--gold); }
+    .nav-btn svg { width: 22px; height: 22px; stroke-width: 1.8; }
+
+    /* ── CARDS ── */
+    .card {
+      background: var(--grey);
+      border-radius: var(--radius);
+      padding: 16px;
+      margin-bottom: 12px;
+      border: 1px solid var(--grey2);
+    }
+    .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+    .card-title { font-size: 15px; font-weight: 600; }
+    .card-meta { font-size: 12px; color: var(--text-muted); }
+
+    /* ── BADGES ── */
+    .badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.5px;
+    }
+    .badge-recu { background: rgba(201,168,76,0.15); color: var(--gold); border: 1px solid rgba(201,168,76,0.3); }
+    .badge-notifie { background: rgba(39,174,96,0.15); color: var(--green); border: 1px solid rgba(39,174,96,0.3); }
+    .badge-remis { background: rgba(100,100,100,0.2); color: #aaa; border: 1px solid #444; }
+    .badge-attente { background: rgba(192,57,43,0.15); color: #e74c3c; border: 1px solid rgba(192,57,43,0.3); }
+
+    /* ── TRANSPORTEUR ── */
+    .carrier { 
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      background: var(--grey2);
+      color: var(--white);
+    }
+
+    /* ── FORMS ── */
+    .form-group { margin-bottom: 16px; }
+    .form-label {
+      display: block;
+      font-size: 11px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+    .form-input, .form-select {
+      width: 100%;
+      background: var(--grey2);
+      border: 1px solid var(--grey3);
+      border-radius: 10px;
+      padding: 13px 15px;
+      color: var(--white);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
+      outline: none;
+      appearance: none;
+      -webkit-appearance: none;
+      transition: border-color 0.2s;
+    }
+    .form-input:focus, .form-select:focus { border-color: var(--gold); }
+    .form-input::placeholder { color: var(--grey3); }
+
+    /* Autocomplete */
+    .autocomplete-wrap { position: relative; }
+    .autocomplete-list {
+      position: absolute;
+      top: 100%; left: 0; right: 0;
+      background: var(--grey2);
+      border: 1px solid var(--gold);
+      border-top: none;
+      border-radius: 0 0 10px 10px;
+      z-index: 50;
+      max-height: 200px;
+      overflow-y: auto;
+      display: none;
+    }
+    .autocomplete-list.open { display: block; }
+    .autocomplete-item {
+      padding: 12px 15px;
+      cursor: pointer;
+      border-bottom: 1px solid var(--grey3);
+      transition: background 0.15s;
+    }
+    .autocomplete-item:last-child { border-bottom: none; }
+    .autocomplete-item:active { background: var(--grey3); }
+    .autocomplete-item .ac-name { font-size: 14px; font-weight: 500; }
+    .autocomplete-item .ac-dept { font-size: 12px; color: var(--text-muted); }
+
+    /* ── BUTTONS ── */
+    .btn {
+      width: 100%;
+      padding: 15px;
+      border-radius: 10px;
+      border: none;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      letter-spacing: 0.5px;
+    }
+    .btn-primary {
+      background: var(--gold);
+      color: var(--black);
+    }
+    .btn-primary:active { background: var(--gold-light); transform: scale(0.98); }
+    .btn-secondary {
+      background: var(--grey2);
+      color: var(--white);
+      border: 1px solid var(--grey3);
+    }
+    .btn-secondary:active { background: var(--grey3); }
+    .btn-notify {
+      background: rgba(39,174,96,0.15);
+      color: var(--green);
+      border: 1px solid rgba(39,174,96,0.4);
+      margin-top: 10px;
+    }
+    .btn-notify:active { background: rgba(39,174,96,0.3); }
+    .btn-sm {
+      width: auto;
+      padding: 8px 16px;
+      font-size: 13px;
+      border-radius: 8px;
+    }
+
+    /* ── SCANNER ── */
+    .scanner-box {
+      background: var(--grey);
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1px solid var(--grey2);
+      margin-bottom: 16px;
+    }
+    .scanner-header {
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border-bottom: 1px solid var(--grey2);
+    }
+    .scanner-dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      background: var(--grey3);
+    }
+    .scanner-dot.active { background: var(--green); animation: pulse 1.5s infinite; }
+    @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
+
+    #reader {
+      width: 100%;
+      min-height: 200px;
+    }
+    #reader video { border-radius: 0 !important; }
+
+    .scan-result {
+      padding: 14px 16px;
+      background: rgba(201,168,76,0.08);
+      border-top: 1px solid var(--grey2);
+      display: none;
+    }
+    .scan-result.show { display: block; }
+    .scan-result-label { font-size: 11px; color: var(--text-muted); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 4px; }
+    .scan-result-code { font-size: 16px; font-weight: 600; color: var(--gold); word-break: break-all; }
+
+    /* ── HOME STATS ── */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .stat-card {
+      background: var(--grey);
+      border-radius: var(--radius);
+      padding: 16px;
+      border: 1px solid var(--grey2);
+    }
+    .stat-num {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 42px;
+      color: var(--gold);
+      line-height: 1;
+    }
+    .stat-label { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+
+    /* ── SEARCH ── */
+    .search-wrap { position: relative; margin-bottom: 16px; }
+    .search-icon {
+      position: absolute;
+      left: 13px; top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+    }
+    .search-input {
+      width: 100%;
+      background: var(--grey);
+      border: 1px solid var(--grey2);
+      border-radius: 10px;
+      padding: 12px 15px 12px 40px;
+      color: var(--white);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      outline: none;
+    }
+    .search-input:focus { border-color: var(--gold); }
+    .search-input::placeholder { color: var(--text-muted); }
+
+    /* ── DETAIL PANEL ── */
+    .detail-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 200;
+      background: rgba(0,0,0,0.7);
+      display: none;
+      align-items: flex-end;
+    }
+    .detail-overlay.open { display: flex; }
+    .detail-panel {
+      background: var(--grey);
+      border-radius: 20px 20px 0 0;
+      width: 100%;
+      padding: 0 20px 40px;
+      max-height: 85vh;
+      overflow-y: auto;
+    }
+    .detail-handle {
+      width: 40px; height: 4px;
+      background: var(--grey3);
+      border-radius: 2px;
+      margin: 14px auto 20px;
+    }
+    .detail-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--grey2);
+    }
+    .detail-row:last-of-type { border-bottom: none; }
+    .detail-key { font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+    .detail-val { font-size: 14px; font-weight: 500; text-align: right; max-width: 60%; word-break: break-all; }
+
+    /* ── SECTION TITLE ── */
+    .section-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 20px;
+      letter-spacing: 2px;
+      color: var(--gold);
+      margin-bottom: 16px;
+    }
+
+    /* ── EMPTY STATE ── */
+    .empty {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--text-muted);
+    }
+    .empty-icon { font-size: 40px; margin-bottom: 12px; }
+    .empty-text { font-size: 14px; }
+
+    /* ── TOAST ── */
+    .toast {
+      position: fixed;
+      top: calc(env(safe-area-inset-top, 20px) + 75px);
+      left: 16px; right: 16px;
+      z-index: 300;
+      background: var(--green);
+      color: white;
+      padding: 14px 18px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 500;
+      opacity: 0;
+      transform: translateY(-10px);
+      transition: all 0.3s;
+      pointer-events: none;
+    }
+    .toast.error { background: var(--red); }
+    .toast.show { opacity: 1; transform: translateY(0); }
+
+    /* ── FILTER CHIPS ── */
+    .filter-row {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+      margin-bottom: 16px;
+      scrollbar-width: none;
+    }
+    .filter-row::-webkit-scrollbar { display: none; }
+    .chip {
+      flex-shrink: 0;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 500;
+      border: 1px solid var(--grey3);
+      background: var(--grey);
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .chip.active { background: var(--gold); color: var(--black); border-color: var(--gold); }
+
+    /* Divider */
+    .divider { height: 1px; background: var(--grey2); margin: 16px 0; }
+
+    .mb-12 { margin-bottom: 12px; }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div>
+    <div class="header-logo">SAINT LAURENT</div>
+    <div class="header-subtitle">Service Courrier</div>
+  </div>
+  <div class="header-date" id="headerDate"></div>
+</div>
+
+<!-- CONTENT -->
+<div class="content">
+
+  <!-- ── TAB : ACCUEIL ── -->
+  <div class="tab active" id="tab-home">
+    <div class="section-title">Tableau de bord</div>
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-num" id="stat-today">0</div>
+        <div class="stat-label">Colis aujourd'hui</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="stat-pending">0</div>
+        <div class="stat-label">En attente / Reçus</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="stat-notifie">0</div>
+        <div class="stat-label">Notifiés</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="stat-remis">0</div>
+        <div class="stat-label">Remis</div>
+      </div>
+    </div>
+
+    <div class="section-title">Colis récents</div>
+    <div id="recent-list"></div>
+  </div>
+
+  <!-- ── TAB : NOUVEAU COLIS ── -->
+  <div class="tab" id="tab-new">
+    <div class="section-title">Nouveau colis</div>
+
+    <!-- Scanner -->
+    <div class="scanner-box">
+      <div class="scanner-header">
+        <div class="scanner-dot" id="scannerDot"></div>
+        <span style="font-size:13px; color: var(--text-muted)">Scanner le code-barres</span>
+        <button class="btn btn-secondary btn-sm" id="toggleScanBtn" style="margin-left:auto" onclick="toggleScanner()">Activer</button>
+      </div>
+      <div id="reader"></div>
+      <div class="scan-result" id="scanResult">
+        <div class="scan-result-label">Code détecté</div>
+        <div class="scan-result-code" id="scanCode"></div>
+      </div>
+    </div>
+
+    <!-- Formulaire -->
+    <div class="form-group">
+      <label class="form-label">N° Tracking *</label>
+      <input class="form-input" id="f-tracking" type="text" placeholder="1Z999AA10123456784" autocomplete="off" />
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Transporteur *</label>
+      <select class="form-select" id="f-carrier">
+        <option value="">-- Sélectionner --</option>
+        <option>DHL</option>
+        <option>FedEx</option>
+        <option>UPS</option>
+        <option>Chronopost</option>
+        <option>Colissimo</option>
+        <option>TNT</option>
+        <option>Autre</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Destinataire *</label>
+      <div class="autocomplete-wrap">
+        <input class="form-input" id="f-employee" type="text" placeholder="Nom ou département..." autocomplete="off" oninput="onEmployeeInput(this.value)" />
+        <div class="autocomplete-list" id="acList"></div>
+      </div>
+    </div>
+
+    <!-- Champs cachés -->
+    <input type="hidden" id="f-email" />
+    <input type="hidden" id="f-dept" />
+    <input type="hidden" id="f-fullname" />
+
+    <div class="form-group" id="selectedEmployee" style="display:none">
+      <div class="card" style="background: rgba(201,168,76,0.08); border-color: rgba(201,168,76,0.3); padding:12px 14px;">
+        <div style="font-size:13px; color: var(--text-muted); margin-bottom:2px">Destinataire sélectionné</div>
+        <div style="font-weight:600" id="sel-name"></div>
+        <div style="font-size:12px; color:var(--text-muted)" id="sel-info"></div>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Notes (optionnel)</label>
+      <input class="form-input" id="f-notes" type="text" placeholder="Fragile, recommandé..." />
+    </div>
+
+    <button class="btn btn-primary" onclick="submitParcel()">Enregistrer le colis</button>
+    <div style="height:12px"></div>
+    <button class="btn btn-secondary" onclick="resetForm()">Réinitialiser</button>
+  </div>
+
+  <!-- ── TAB : HISTORIQUE ── -->
+  <div class="tab" id="tab-history">
+    <div class="section-title">Historique</div>
+
+    <div class="search-wrap">
+      <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input class="search-input" id="historySearch" placeholder="Tracking, nom, transporteur..." oninput="renderHistory()" />
+    </div>
+
+    <div class="filter-row" id="filterChips">
+      <div class="chip active" data-filter="all" onclick="setFilter(this,'all')">Tous</div>
+      <div class="chip" data-filter="Reçu" onclick="setFilter(this,'Reçu')">Reçus</div>
+      <div class="chip" data-filter="Notifié" onclick="setFilter(this,'Notifié')">Notifiés</div>
+      <div class="chip" data-filter="Remis" onclick="setFilter(this,'Remis')">Remis</div>
+      <div class="chip" data-filter="En attente" onclick="setFilter(this,'En attente')">En attente</div>
+    </div>
+
+    <div id="history-list"></div>
+  </div>
+
+  <!-- ── TAB : EMPLOYÉS ── -->
+  <div class="tab" id="tab-employees">
+    <div class="section-title">Annuaire</div>
+    <div class="search-wrap">
+      <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input class="search-input" id="empSearch" placeholder="Nom, département..." oninput="renderEmployees()" />
+    </div>
+    <div id="emp-list"></div>
+  </div>
+
+</div>
+
+<!-- BOTTOM NAV -->
+<nav class="bottom-nav">
+  <button class="nav-btn active" id="nav-home" onclick="goTab('home')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    Accueil
+  </button>
+  <button class="nav-btn" id="nav-new" onclick="goTab('new')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+    Nouveau
+  </button>
+  <button class="nav-btn" id="nav-history" onclick="goTab('history')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+    Historique
+  </button>
+  <button class="nav-btn" id="nav-employees" onclick="goTab('employees')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+    Employés
+  </button>
+</nav>
+
+<!-- DETAIL PANEL -->
+<div class="detail-overlay" id="detailOverlay" onclick="closeDetail(event)">
+  <div class="detail-panel" id="detailPanel">
+    <div class="detail-handle"></div>
+    <div id="detailContent"></div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ─────────────────────────────────────────
+// DATA
+// ─────────────────────────────────────────
+
+const EMPLOYEES = [
+  { id:1, nom:"Dupont", prenom:"Marie", email:"marie.dupont@ysl.com", dept:"Direction Générale", actif:true },
+  { id:2, nom:"Martin", prenom:"Pierre", email:"pierre.martin@ysl.com", dept:"Finance", actif:true },
+  { id:3, nom:"Bernard", prenom:"Sophie", email:"sophie.bernard@ysl.com", dept:"Ressources Humaines", actif:true },
+  { id:4, nom:"Petit", prenom:"Lucas", email:"lucas.petit@ysl.com", dept:"Marketing", actif:true },
+  { id:5, nom:"Thomas", prenom:"Émilie", email:"emilie.thomas@ysl.com", dept:"Design", actif:true },
+  { id:6, nom:"Robert", prenom:"Antoine", email:"antoine.robert@ysl.com", dept:"IT", actif:true },
+  { id:7, nom:"Richard", prenom:"Camille", email:"camille.richard@ysl.com", dept:"Commercial", actif:true },
+  { id:8, nom:"Durand", prenom:"Hugo", email:"hugo.durand@ysl.com", dept:"Logistique", actif:true },
+  { id:9, nom:"Moreau", prenom:"Léa", email:"lea.moreau@ysl.com", dept:"Juridique", actif:true },
+  { id:10, nom:"Laurent", prenom:"Théo", email:"theo.laurent@ysl.com", dept:"Communication", actif:true },
+];
+
+const CARRIERS = { DHL:"#D40511", FedEx:"#4D148C", UPS:"#351C15", Chronopost:"#FF6600", Colissimo:"#FFCB00", TNT:"#FF6600", Autre:"#555" };
+
+let parcels = JSON.parse(localStorage.getItem('ysl_parcels') || '[]');
+let selectedEmployee = null;
+let scanner = null;
+let scannerActive = false;
+let currentFilter = 'all';
+
+// ─────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  updateHeaderDate();
+  updateStats();
+  renderRecent();
+  renderHistory();
+  renderEmployees();
+  setInterval(updateHeaderDate, 60000);
+});
+
+function updateHeaderDate() {
+  const now = new Date();
+  const opts = { weekday:'short', day:'numeric', month:'short' };
+  document.getElementById('headerDate').innerHTML =
+    now.toLocaleDateString('fr-FR', opts).replace('.','') + '<br>' +
+    now.toLocaleTimeString('fr-FR', { hour:'2-digit', minute:'2-digit' });
+}
+
+// ─────────────────────────────────────────
+// NAVIGATION
+// ─────────────────────────────────────────
+function goTab(name) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  document.getElementById('nav-' + name).classList.add('active');
+  if (name !== 'new' && scannerActive) stopScanner().then(() => {});
+  if (name === 'home') { updateStats(); renderRecent(); }
+  if (name === 'history') renderHistory();
+  if (name === 'employees') renderEmployees();
+}
+
+// ─────────────────────────────────────────
+// SCANNER
+// ─────────────────────────────────────────
+function toggleScanner() {
+  if (scannerActive) stopScanner().then(() => {});
+  else startScanner();
+}
+
+function startScanner() {
+  // Toujours repartir d'un div propre
+  document.getElementById('reader').innerHTML = '';
+  scanner = new Html5Qrcode("reader");
+  const config = { fps: 10, qrbox: { width: 260, height: 120 }, aspectRatio: 1.5 };
+  scanner.start(
+    { facingMode: "environment" },
+    config,
+    onScanSuccess,
+    () => {}
+  ).then(() => {
+    scannerActive = true;
+    document.getElementById('scannerDot').classList.add('active');
+    document.getElementById('toggleScanBtn').textContent = 'Arrêter';
+  }).catch(() => {
+    scanner = null;
+    showToast('Caméra non disponible — saisie manuelle', true);
+  });
+}
+
+// Retourne une Promise pour pouvoir attendre l’arrêt complet avant de relancer
+function stopScanner() {
+  scannerActive = false;
+  document.getElementById('scannerDot').classList.remove('active');
+  document.getElementById('toggleScanBtn').textContent = 'Activer';
+  if (!scanner) {
+    document.getElementById('reader').innerHTML = '';
+    return Promise.resolve();
+  }
+  const s = scanner;
+  scanner = null;
+  return s.stop()
+    .catch(() => {})
+    .finally(() => {
+      try { s.clear(); } catch(e) {}
+      document.getElementById('reader').innerHTML = '';
+    });
+}
+
+function onScanSuccess(code) {
+  // Stopper d'abord, puis remplir le champ une fois la caméra libérée
+  stopScanner().then(() => {
+    document.getElementById('f-tracking').value = code;
+    document.getElementById('scanCode').textContent = code;
+    document.getElementById('scanResult').classList.add('show');
+    showToast('Code scanné : ' + code.substring(0, 20) + (code.length > 20 ? '…' : ''));
+    navigator.vibrate && navigator.vibrate(100);
+  });
+}
+
+// ─────────────────────────────────────────
+// AUTOCOMPLETE EMPLOYÉS
+// ─────────────────────────────────────────
+function onEmployeeInput(val) {
+  selectedEmployee = null;
+  document.getElementById('f-email').value = '';
+  document.getElementById('f-dept').value = '';
+  document.getElementById('f-fullname').value = '';
+  document.getElementById('selectedEmployee').style.display = 'none';
+
+  const list = document.getElementById('acList');
+  if (val.length < 2) { list.classList.remove('open'); return; }
+
+  const q = val.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  const matches = EMPLOYEES.filter(e => {
+    if (!e.actif) return false;
+    const full = (e.prenom + ' ' + e.nom + ' ' + e.dept).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    return full.includes(q);
+  }).slice(0, 6);
+
+  if (!matches.length) { list.classList.remove('open'); return; }
+
+  list.innerHTML = matches.map(e => `
+    <div class="autocomplete-item" onclick="selectEmployee(${e.id})">
+      <div class="ac-name">${e.prenom} ${e.nom}</div>
+      <div class="ac-dept">${e.dept} · ${e.email}</div>
+    </div>
+  `).join('');
+  list.classList.add('open');
+}
+
+function selectEmployee(id) {
+  const e = EMPLOYEES.find(x => x.id === id);
+  if (!e) return;
+  selectedEmployee = e;
+  document.getElementById('f-employee').value = e.prenom + ' ' + e.nom;
+  document.getElementById('f-email').value = e.email;
+  document.getElementById('f-dept').value = e.dept;
+  document.getElementById('f-fullname').value = e.prenom + ' ' + e.nom;
+  document.getElementById('acList').classList.remove('open');
+  document.getElementById('sel-name').textContent = e.prenom + ' ' + e.nom;
+  document.getElementById('sel-info').textContent = e.dept + ' · ' + e.email;
+  document.getElementById('selectedEmployee').style.display = 'block';
+}
+
+document.addEventListener('click', e => {
+  if (!e.target.closest('.autocomplete-wrap')) {
+    document.getElementById('acList').classList.remove('open');
+  }
+});
+
+// ─────────────────────────────────────────
+// FORMULAIRE — SUBMIT
+// ─────────────────────────────────────────
+function submitParcel() {
+  const tracking = document.getElementById('f-tracking').value.trim();
+  const carrier = document.getElementById('f-carrier').value;
+  const email = document.getElementById('f-email').value;
+  const fullname = document.getElementById('f-fullname').value;
+  const dept = document.getElementById('f-dept').value;
+  const notes = document.getElementById('f-notes').value.trim();
+
+  if (!tracking) { showToast('N° tracking requis', true); return; }
+  if (!carrier) { showToast('Transporteur requis', true); return; }
+  if (!email) { showToast('Sélectionner un destinataire', true); return; }
+
+  const now = new Date();
+  const parcel = {
+    id: Date.now(),
+    tracking,
+    carrier,
+    email,
+    fullname,
+    dept,
+    notes,
+    status: 'Reçu',
+    dateReception: now.toISOString(),
+    dateRemise: null,
+  };
+
+  parcels.unshift(parcel);
+  saveParcels();
+  updateStats();
+
+  // Stopper le scanner s'il tourne, puis afficher la bannière de choix
+  stopScanner().then(() => {
+    document.getElementById('f-tracking').value = '';
+    document.getElementById('f-notes').value = '';
+    document.getElementById('scanResult').classList.remove('show');
+    document.getElementById('scanCode').textContent = '';
+    showPostSaveBanner(fullname);
+  });
+}
+
+function showPostSaveBanner(fullname) {
+  // Supprimer une éventuelle bannière précédente
+  const old = document.getElementById('postSaveBanner');
+  if (old) old.remove();
+
+  const banner = document.createElement('div');
+  banner.id = 'postSaveBanner';
+  banner.style.cssText = [
+    'position:fixed','top:calc(env(safe-area-inset-top,20px) + 75px)',
+    'left:16px','right:16px','z-index:250',
+    'background:#1e1e1e','border:1px solid #c9a84c',
+    'border-radius:12px','padding:16px',
+    'box-shadow:0 8px 32px rgba(0,0,0,0.5)'
+  ].join(';');
+
+  banner.innerHTML = \`
+    <div style="font-size:13px;color:#888;margin-bottom:6px;letter-spacing:.5px">COLIS ENREGISTRÉ ✓</div>
+    <div style="font-size:15px;font-weight:600;margin-bottom:14px">Autre colis pour <span style="color:#c9a84c">\${fullname}</span> ?</div>
+    <div style="display:flex;gap:10px">
+      <button onclick="postSaveYes()" style="flex:1;padding:12px;background:#c9a84c;color:#0a0a0a;border:none;border-radius:8px;font-size:14px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer">
+        📦 Oui, scanner
+      </button>
+      <button onclick="postSaveNo()" style="flex:1;padding:12px;background:#2c2c2c;color:#f5f0eb;border:1px solid #444;border-radius:8px;font-size:14px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer">
+        ✓ Terminer
+      </button>
+    </div>
+  \`;
+  document.body.appendChild(banner);
+}
+
+function postSaveYes() {
+  const b = document.getElementById('postSaveBanner');
+  if (b) b.remove();
+  startScanner();
+}
+
+function postSaveNo() {
+  const b = document.getElementById('postSaveBanner');
+  if (b) b.remove();
+  resetForm();
+  goTab('home');
+  showToast('Colis enregistré !');
+}
+
+function resetForm() {
+  document.getElementById('f-tracking').value = '';
+  document.getElementById('f-carrier').value = '';
+  document.getElementById('f-employee').value = '';
+  document.getElementById('f-email').value = '';
+  document.getElementById('f-dept').value = '';
+  document.getElementById('f-fullname').value = '';
+  document.getElementById('f-notes').value = '';
+  document.getElementById('selectedEmployee').style.display = 'none';
+  document.getElementById('scanResult').classList.remove('show');
+  document.getElementById('scanCode').textContent = '';
+  selectedEmployee = null;
+  if (scannerActive) stopScanner().then(() => {});
+}
+
+// ─────────────────────────────────────────
+// STATS
+// ─────────────────────────────────────────
+function updateStats() {
+  const today = new Date().toDateString();
+  const todayParcels = parcels.filter(p => new Date(p.dateReception).toDateString() === today);
+  document.getElementById('stat-today').textContent = todayParcels.length;
+  document.getElementById('stat-pending').textContent = parcels.filter(p => p.status === 'Reçu' || p.status === 'En attente').length;
+  document.getElementById('stat-notifie').textContent = parcels.filter(p => p.status === 'Notifié').length;
+  document.getElementById('stat-remis').textContent = parcels.filter(p => p.status === 'Remis').length;
+}
+
+// ─────────────────────────────────────────
+// RENDER RECENT (HOME)
+// ─────────────────────────────────────────
+function renderRecent() {
+  const el = document.getElementById('recent-list');
+  const recent = parcels.slice(0, 5);
+  if (!recent.length) {
+    el.innerHTML = '<div class="empty"><div class="empty-icon">📦</div><div class="empty-text">Aucun colis enregistré</div></div>';
+    return;
+  }
+  el.innerHTML = recent.map(p => parcelCard(p)).join('');
+}
+
+// ─────────────────────────────────────────
+// RENDER HISTORY
+// ─────────────────────────────────────────
+function setFilter(el, val) {
+  currentFilter = val;
+  document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  renderHistory();
+}
+
+function renderHistory() {
+  const q = (document.getElementById('historySearch').value || '').toLowerCase();
+  const el = document.getElementById('history-list');
+  let list = parcels;
+  if (currentFilter !== 'all') list = list.filter(p => p.status === currentFilter);
+  if (q) list = list.filter(p =>
+    p.tracking.toLowerCase().includes(q) ||
+    p.fullname.toLowerCase().includes(q) ||
+    p.carrier.toLowerCase().includes(q) ||
+    (p.dept||'').toLowerCase().includes(q)
+  );
+  if (!list.length) {
+    el.innerHTML = '<div class="empty"><div class="empty-icon">🔍</div><div class="empty-text">Aucun résultat</div></div>';
+    return;
+  }
+  el.innerHTML = list.map(p => parcelCard(p)).join('');
+}
+
+// ─────────────────────────────────────────
+// RENDER EMPLOYEES
+// ─────────────────────────────────────────
+function renderEmployees() {
+  const q = (document.getElementById('empSearch').value || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  const el = document.getElementById('emp-list');
+  const list = EMPLOYEES.filter(e => {
+    if (!e.actif) return false;
+    const s = (e.prenom+' '+e.nom+' '+e.dept).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+    return !q || s.includes(q);
+  });
+  if (!list.length) { el.innerHTML = '<div class="empty"><div class="empty-icon">👤</div><div class="empty-text">Aucun employé</div></div>'; return; }
+  el.innerHTML = list.map(e => `
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">${e.prenom} ${e.nom}</div>
+          <div class="card-meta">${e.dept}</div>
+        </div>
+        <div style="font-size:12px; color: var(--text-muted)">${e.email}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ─────────────────────────────────────────
+// PARCEL CARD
+// ─────────────────────────────────────────
+function parcelCard(p) {
+  const d = new Date(p.dateReception);
+  const dateStr = d.toLocaleDateString('fr-FR', { day:'2-digit', month:'2-digit' }) + ' ' + d.toLocaleTimeString('fr-FR', { hour:'2-digit', minute:'2-digit' });
+  const badgeClass = { 'Reçu':'badge-recu', 'Notifié':'badge-notifie', 'Remis':'badge-remis', 'En attente':'badge-attente' }[p.status] || 'badge-recu';
+  return `
+    <div class="card" onclick="openDetail(${p.id})">
+      <div class="card-header">
+        <div>
+          <span class="carrier">${p.carrier}</span>
+          <span class="card-meta" style="margin-left:8px">${dateStr}</span>
+        </div>
+        <span class="badge ${badgeClass}">${p.status}</span>
+      </div>
+      <div style="font-size:14px; font-weight:600; margin-bottom:4px">${p.fullname}</div>
+      <div style="font-size:12px; color:var(--text-muted)">${p.dept} · ${p.tracking}</div>
+    </div>
+  `;
+}
+
+// ─────────────────────────────────────────
+// DETAIL PANEL
+// ─────────────────────────────────────────
+function openDetail(id) {
+  const p = parcels.find(x => x.id === id);
+  if (!p) return;
+  const d = new Date(p.dateReception);
+  const dateStr = d.toLocaleDateString('fr-FR', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+  const timeStr = d.toLocaleTimeString('fr-FR', { hour:'2-digit', minute:'2-digit' });
+
+  const mailto = buildMailto(p);
+  const badgeClass = { 'Reçu':'badge-recu', 'Notifié':'badge-notifie', 'Remis':'badge-remis', 'En attente':'badge-attente' }[p.status] || 'badge-recu';
+
+  document.getElementById('detailContent').innerHTML = `
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px">
+      <div>
+        <div style="font-family:'Bebas Neue',sans-serif; font-size:22px; letter-spacing:2px; color:var(--gold)">${p.carrier}</div>
+        <span class="badge ${badgeClass}">${p.status}</span>
+      </div>
+      <button onclick="closeDetail()" style="background:var(--grey2); border:none; color:var(--text-muted); width:32px; height:32px; border-radius:50%; font-size:18px; cursor:pointer">×</button>
+    </div>
+
+    <div class="detail-row"><span class="detail-key">Destinataire</span><span class="detail-val">${p.fullname}</span></div>
+    <div class="detail-row"><span class="detail-key">Département</span><span class="detail-val">${p.dept}</span></div>
+    <div class="detail-row"><span class="detail-key">Email</span><span class="detail-val" style="font-size:12px">${p.email}</span></div>
+    <div class="detail-row"><span class="detail-key">Tracking</span><span class="detail-val">${p.tracking}</span></div>
+    <div class="detail-row"><span class="detail-key">Réception</span><span class="detail-val">${dateStr} à ${timeStr}</span></div>
+    ${p.notes ? `<div class="detail-row"><span class="detail-key">Notes</span><span class="detail-val">${p.notes}</span></div>` : ''}
+
+    <div class="divider"></div>
+
+    <a href="${mailto}" class="btn btn-notify" style="display:block; text-align:center; text-decoration:none; padding:14px; margin-bottom:10px" onclick="markNotified(${p.id})">
+      ✉️ Notifier par email (Outlook)
+    </a>
+
+    ${p.status !== 'Remis' ? `<button class="btn btn-secondary" onclick="markRemis(${p.id})">✅ Marquer comme remis</button>` : ''}
+    <div style="height:10px"></div>
+    <button class="btn" style="background:rgba(192,57,43,0.15); color:#e74c3c; border:1px solid rgba(192,57,43,0.3)" onclick="deleteParcel(${p.id})">🗑 Supprimer</button>
+  `;
+
+  document.getElementById('detailOverlay').classList.add('open');
+}
+
+function closeDetail(e) {
+  if (e && e.target !== document.getElementById('detailOverlay')) return;
+  document.getElementById('detailOverlay').classList.remove('open');
+  renderRecent();
+  renderHistory();
+  updateStats();
+}
+
+// ─────────────────────────────────────────
+// ACTIONS
+// ─────────────────────────────────────────
+function buildMailto(p) {
+  const d = new Date(p.dateReception);
+  const dateStr = d.toLocaleDateString('fr-FR', { weekday:'long', day:'numeric', month:'long' });
+  const heureStr = d.toLocaleTimeString('fr-FR', { hour:'2-digit', minute:'2-digit' });
+  const subject = encodeURIComponent(`Colis ${p.carrier} en attente de retrait — Service Courrier`);
+  const body = encodeURIComponent(
+    `Bonjour ${p.fullname},\n\n` +
+    `Un colis vous est parvenu au Service Courrier.\n\n` +
+    `Transporteur : ${p.carrier}\n` +
+    `N° de tracking : ${p.tracking}\n` +
+    `Reçu le : ${dateStr} à ${heureStr}\n` +
+    (p.notes ? `Notes : ${p.notes}\n` : '') +
+    `\nMerci de venir le récupérer dès que possible.\n\n` +
+    `Cordialement,\nService Courrier — Saint Laurent`
+  );
+  return `mailto:${p.email}?subject=${subject}&body=${body}`;
+}
+
+function markNotified(id) {
+  const p = parcels.find(x => x.id === id);
+  if (p && p.status === 'Reçu') { p.status = 'Notifié'; saveParcels(); }
+  document.getElementById('detailOverlay').classList.remove('open');
+  updateStats(); renderRecent(); renderHistory();
+  showToast('Email Outlook ouvert');
+}
+
+function markRemis(id) {
+  const p = parcels.find(x => x.id === id);
+  if (p) { p.status = 'Remis'; p.dateRemise = new Date().toISOString(); saveParcels(); }
+  document.getElementById('detailOverlay').classList.remove('open');
+  updateStats(); renderRecent(); renderHistory();
+  showToast('Colis marqué remis');
+}
+
+function deleteParcel(id) {
+  if (!confirm('Supprimer ce colis ?')) return;
+  parcels = parcels.filter(x => x.id !== id);
+  saveParcels();
+  document.getElementById('detailOverlay').classList.remove('open');
+  updateStats(); renderRecent(); renderHistory();
+  showToast('Colis supprimé');
+}
+
+// ─────────────────────────────────────────
+// STORAGE
+// ─────────────────────────────────────────
+function saveParcels() {
+  localStorage.setItem('ysl_parcels', JSON.stringify(parcels));
+}
+
+// ─────────────────────────────────────────
+// TOAST
+// ─────────────────────────────────────────
+function showToast(msg, isError = false) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast' + (isError ? ' error' : '') + ' show';
+  setTimeout(() => { t.classList.remove('show'); }, 2800);
+}
+</script>
+
+<!-- PWA Service Worker Registration -->
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  });
+}
+</script>
+
+</body>
+</html>
