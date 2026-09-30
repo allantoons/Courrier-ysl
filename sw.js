@@ -1,5 +1,5 @@
 // v2 : changez ce nom à chaque mise à jour pour forcer le rafraîchissement
-const CACHE = 'courrier-ysl-v2';
+const CACHE = 'courrier-ysl-v4';
 const ASSETS = [
   './',
   './index.html',
